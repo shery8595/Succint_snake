@@ -4,18 +4,23 @@ import random
 
 pygame.init()
 
+# Window Size
 SW, SH = 600, 600
 BLOCK_SIZE = 50
 
+# Font
 FONT = pygame.font.Font(r'D:\open-sans\OpenSans-Bold.ttf', 40)
 
+# Colors
 GRID_COLOR = (30, 30, 30)
-BACKGROUND_COLOR = (10, 10, 10)
+BACKGROUND_COLOR = (231, 84, 128)  # Light Pink
 
+# Create the game window
 screen = pygame.display.set_mode((SW, SH))
-pygame.display.set_caption("🐍 Enhanced Snake!")
+pygame.display.set_caption("Succinct_Snake Game")
 clock = pygame.time.Clock()
 
+# Load Images
 snake_img = pygame.image.load(r"D:\0xcrashout.jpg")
 snake_img = pygame.transform.scale(snake_img, (BLOCK_SIZE, BLOCK_SIZE))
 
@@ -23,6 +28,7 @@ apple_img = pygame.image.load(r"D:\succint.jpg")
 apple_img = pygame.transform.scale(apple_img, (BLOCK_SIZE, BLOCK_SIZE))
 
 def draw_grid():
+    """Draws a subtle grid on the screen."""
     for x in range(0, SW, BLOCK_SIZE):
         for y in range(0, SH, BLOCK_SIZE):
             pygame.draw.rect(screen, GRID_COLOR, (x, y, BLOCK_SIZE, BLOCK_SIZE), 1)
@@ -40,9 +46,11 @@ class Snake:
     def update(self):
         global apple
 
+        # Check collision with itself
         for square in self.body:
             if self.head.x == square.x and self.head.y == square.y:
                 self.dead = True
+        # Check if out of bounds
         if self.head.x not in range(0, SW) or self.head.y not in range(0, SH):
             self.dead = True
 
@@ -62,22 +70,25 @@ class Apple:
         self.x = int(random.randint(0, SW - BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE
         self.y = int(random.randint(0, SH - BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE
         self.rect = pygame.Rect(self.x, self.y, BLOCK_SIZE, BLOCK_SIZE)
-        self.opacity = 0
+        self.opacity = 0  # Apple fade-in effect
 
     def update(self):
+        """Renders the apple with a fade-in effect."""
         if self.opacity < 255:
-            self.opacity += 5
+            self.opacity += 5  # Increase opacity for fade-in effect
         apple_surface = apple_img.copy()
         apple_surface.set_alpha(self.opacity)
         screen.blit(apple_surface, (self.x, self.y))
 
 def draw_score():
+    """Displays the score in the top-center of the screen."""
     score_text = FONT.render(f"Score: {len(snake.body)}", True, "white")
     score_rect = score_text.get_rect(center=(SW / 2, 40))
     screen.blit(score_text, score_rect)
 
 def game_over():
-    screen.fill((0, 0, 0, 180))
+    """Displays the game-over screen."""
+    screen.fill((0, 0, 0, 180))  # Dim the screen
     game_over_text = FONT.render("Game Over!", True, "red")
     game_over_rect = game_over_text.get_rect(center=(SW / 2, SH / 2 - 20))
     restart_text = FONT.render("Press SPACE to Restart", True, "white")
@@ -87,6 +98,7 @@ def game_over():
     screen.blit(restart_text, restart_rect)
     pygame.display.update()
     
+    # Wait for restart
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -98,6 +110,7 @@ def game_over():
 def main():
     global snake, apple
 
+    # Initialize game objects
     snake = Snake()
     apple = Apple()
 
@@ -127,10 +140,12 @@ def main():
         apple.update()
         draw_score()
 
+        # Draw the snake
         screen.blit(snake_img, (snake.head.x, snake.head.y))
         for square in snake.body:
             screen.blit(snake_img, (square.x, square.y))
 
+        # Check if the snake eats the apple
         if snake.head.x == apple.x and snake.head.y == apple.y:
             snake.body.append(pygame.Rect(snake.body[-1].x, snake.body[-1].y, BLOCK_SIZE, BLOCK_SIZE))
             apple = Apple()
