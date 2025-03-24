@@ -1,0 +1,142 @@
+import sys
+import pygame
+import random
+
+pygame.init()
+
+SW, SH = 600, 600
+BLOCK_SIZE = 50
+
+FONT = pygame.font.Font(r'D:\open-sans\OpenSans-Bold.ttf', 40)
+
+GRID_COLOR = (30, 30, 30)
+BACKGROUND_COLOR = (10, 10, 10)
+
+screen = pygame.display.set_mode((SW, SH))
+pygame.display.set_caption("🐍 Enhanced Snake!")
+clock = pygame.time.Clock()
+
+snake_img = pygame.image.load(r"D:\0xcrashout.jpg")
+snake_img = pygame.transform.scale(snake_img, (BLOCK_SIZE, BLOCK_SIZE))
+
+apple_img = pygame.image.load(r"D:\succint.jpg")
+apple_img = pygame.transform.scale(apple_img, (BLOCK_SIZE, BLOCK_SIZE))
+
+def draw_grid():
+    for x in range(0, SW, BLOCK_SIZE):
+        for y in range(0, SH, BLOCK_SIZE):
+            pygame.draw.rect(screen, GRID_COLOR, (x, y, BLOCK_SIZE, BLOCK_SIZE), 1)
+
+class Snake:
+    def __init__(self):
+        self.x = BLOCK_SIZE
+        self.y = BLOCK_SIZE
+        self.xdirec = 1
+        self.ydirec = 0
+        self.head = pygame.Rect(self.x, self.y, BLOCK_SIZE, BLOCK_SIZE)
+        self.body = [pygame.Rect(self.x - BLOCK_SIZE, self.y, BLOCK_SIZE, BLOCK_SIZE)]
+        self.dead = False
+
+    def update(self):
+        global apple
+
+        for square in self.body:
+            if self.head.x == square.x and self.head.y == square.y:
+                self.dead = True
+        if self.head.x not in range(0, SW) or self.head.y not in range(0, SH):
+            self.dead = True
+
+        if self.dead:
+            game_over()
+            return
+
+        self.body.append(self.head)
+        for i in range(len(self.body) - 1):
+            self.body[i].x, self.body[i].y = self.body[i + 1].x, self.body[i + 1].y
+        self.head.x += self.xdirec * BLOCK_SIZE
+        self.head.y += self.ydirec * BLOCK_SIZE
+        self.body.remove(self.head)
+
+class Apple:
+    def __init__(self):
+        self.x = int(random.randint(0, SW - BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE
+        self.y = int(random.randint(0, SH - BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE
+        self.rect = pygame.Rect(self.x, self.y, BLOCK_SIZE, BLOCK_SIZE)
+        self.opacity = 0
+
+    def update(self):
+        if self.opacity < 255:
+            self.opacity += 5
+        apple_surface = apple_img.copy()
+        apple_surface.set_alpha(self.opacity)
+        screen.blit(apple_surface, (self.x, self.y))
+
+def draw_score():
+    score_text = FONT.render(f"Score: {len(snake.body)}", True, "white")
+    score_rect = score_text.get_rect(center=(SW / 2, 40))
+    screen.blit(score_text, score_rect)
+
+def game_over():
+    screen.fill((0, 0, 0, 180))
+    game_over_text = FONT.render("Game Over!", True, "red")
+    game_over_rect = game_over_text.get_rect(center=(SW / 2, SH / 2 - 20))
+    restart_text = FONT.render("Press SPACE to Restart", True, "white")
+    restart_rect = restart_text.get_rect(center=(SW / 2, SH / 2 + 30))
+    
+    screen.blit(game_over_text, game_over_rect)
+    screen.blit(restart_text, restart_rect)
+    pygame.display.update()
+    
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                main()
+
+def main():
+    global snake, apple
+
+    snake = Snake()
+    apple = Apple()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_DOWN and snake.ydirec == 0:
+                    snake.ydirec = 1
+                    snake.xdirec = 0
+                elif event.key == pygame.K_UP and snake.ydirec == 0:
+                    snake.ydirec = -1
+                    snake.xdirec = 0
+                elif event.key == pygame.K_RIGHT and snake.xdirec == 0:
+                    snake.ydirec = 0
+                    snake.xdirec = 1
+                elif event.key == pygame.K_LEFT and snake.xdirec == 0:
+                    snake.ydirec = 0
+                    snake.xdirec = -1
+
+        snake.update()
+
+        screen.fill(BACKGROUND_COLOR)
+        draw_grid()
+        apple.update()
+        draw_score()
+
+        screen.blit(snake_img, (snake.head.x, snake.head.y))
+        for square in snake.body:
+            screen.blit(snake_img, (square.x, square.y))
+
+        if snake.head.x == apple.x and snake.head.y == apple.y:
+            snake.body.append(pygame.Rect(snake.body[-1].x, snake.body[-1].y, BLOCK_SIZE, BLOCK_SIZE))
+            apple = Apple()
+
+        pygame.display.update()
+        clock.tick(10)
+
+if __name__ == "__main__":
+    main()
